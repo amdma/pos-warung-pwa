@@ -113,4 +113,4 @@ GitHub: [@username](https://github.com/username)
 
 ## Lisensi
 
-[MIT](LICENSE) <!-- atau hapus bagian ini kalau belum ditentukan -->
+
