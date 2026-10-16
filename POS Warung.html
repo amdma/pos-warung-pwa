@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>POS Warung</title>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#faf7f2; --card:#ffffff; --text:#2b2118; --muted:#7a6b5d;
+  --accent:#d9480f; --accent-text:#ffffff; --line:#e8dfd3; --ok:#2b8a3e; --bad:#c92a2a;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1612; --card:#262019; --text:#f3ece3; --muted:#a8998a;
+    --accent:#f76707; --accent-text:#1b1612; --line:#3a3128; --ok:#51cf66; --bad:#ff6b6b;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding:12px;max-width:1000px;margin:0 auto}
+h1{font-size:1.2rem;margin:4px 0 12px}
+h2{font-size:1rem;margin:0 0 8px;color:var(--muted)}
+.layout{display:grid;gap:12px;grid-template-columns:1fr}
+@media(min-width:760px){.layout{grid-template-columns:1.4fr 1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.menu button{
+  background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;
+  padding:14px 8px;font-size:1rem;cursor:pointer;text-align:center;min-height:72px
+}
+.menu button:active{transform:scale(.96)}
+.menu .nama{display:block;font-weight:600}
+.menu .harga{display:block;color:var(--muted);font-size:.85rem;margin-top:4px}
+.item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.item .info{flex:1;min-width:0}
+.item .sub{color:var(--muted);font-size:.85rem}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:1.3rem;cursor:pointer}
+.qty span{min-width:24px;text-align:center;font-weight:700}
+.kosong{color:var(--muted);text-align:center;padding:20px 0}
+.total{display:flex;justify-content:space-between;font-size:1.4rem;font-weight:700;padding:12px 0 8px}
+label{display:block;color:var(--muted);font-size:.85rem;margin-top:6px}
+input{width:100%;font-size:1.3rem;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
+.cepat{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.cepat button{flex:1;min-width:70px;padding:10px 4px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:.95rem;cursor:pointer}
+.kembalian{display:flex;justify-content:space-between;font-size:1.3rem;font-weight:700;margin-top:12px}
+.ok{color:var(--ok)} .kurang{color:var(--bad)}
+.aksi{display:flex;gap:8px;margin-top:12px}
+.aksi button{flex:1;padding:14px;border-radius:12px;border:none;font-size:1rem;font-weight:700;cursor:pointer}
+.btn-selesai{background:var(--accent);color:var(--accent-text)}
+.btn-selesai:disabled{opacity:.4;cursor:not-allowed}
+.btn-reset{background:var(--bg);color:var(--text);border:1px solid var(--line)!important}
+.tabs{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}
+.tabs button{padding:10px 16px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:.95rem;cursor:pointer;white-space:nowrap}
+.tabs button.aktif{background:var(--accent);color:var(--accent-text);border-color:var(--accent);font-weight:700}
+.bebas{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.bebas input{font-size:1rem;padding:10px;min-width:0}
+.bebas input:first-child{flex:1.4}
+.bebas input:nth-child(2){flex:1}
+.bebas button{padding:10px 12px;border-radius:10px;border:none;background:var(--accent);color:var(--accent-text);font-weight:700;cursor:pointer;white-space:nowrap}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ok);color:#fff;padding:10px 18px;border-radius:999px;opacity:0;transition:opacity .25s;pointer-events:none}
+#toast.tampil{opacity:1}
+</style>
+</head>
+<body>
+<h1>🍜 POS Warung</h1>
+
+<div class="layout">
+  <section class="panel">
+    <h2>Menu (tap untuk tambah)</h2>
+    <div class="tabs" id="tabs"></div>
+    <div class="menu" id="menu"></div>
+    <div class="bebas">
+      <input id="bebasNama" placeholder="Item bebas (nama)">
+      <input id="bebasHarga" type="number" inputmode="numeric" placeholder="Harga">
+      <button id="btnBebas">+ Tambah</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Pesanan</h2>
+    <div id="keranjang"></div>
+
+    <div class="total"><span>Total</span><span id="total">Rp 0</span></div>
+
+    <label for="bayar">Uang dibayar</label>
+    <input id="bayar" type="number" inputmode="numeric" placeholder="0">
+    <div class="cepat" id="cepat"></div>
+
+    <div class="kembalian"><span id="labelKembalian">Kembalian</span><span id="kembalian">Rp 0</span></div>
+
+    <div class="aksi">
+      <button class="btn-reset" id="btnReset">Batal</button>
+      <button class="btn-selesai" id="btnSelesai" disabled>Selesai</button>
+    </div>
+  </section>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ========== 1. DATA MENU ==========
+   Ubah daftar ini sesuai menu warungmu.
+   Tiap menu punya id UNIK, nama, dan harga. */
+const menu = [
+  // kategori: bebas diisi, tab akan dibuat otomatis dari sini
+  { id: 1, kategori: "Makanan",  nama: "Nasi Goreng",  harga: 15000 },
+  { id: 2, kategori: "Makanan",  nama: "Mie Goreng",   harga: 13000 },
+  { id: 3, kategori: "Makanan",  nama: "Ayam Geprek",  harga: 17000 },
+  { id: 4, kategori: "Makanan",  nama: "Soto Ayam",    harga: 14000 },
+  { id: 5, kategori: "Makanan",  nama: "Nasi Putih",   harga: 4000 },
+  { id: 6, kategori: "Minuman",  nama: "Es Teh",       harga: 4000 },
+  { id: 7, kategori: "Minuman",  nama: "Es Jeruk",     harga: 5000 },
+  { id: 8, kategori: "Minuman",  nama: "Kopi Hitam",   harga: 5000 },
+  { id: 9, kategori: "Minuman",  nama: "Air Putih Es", harga: 1000 },
+  { id: 10, kategori: "Minuman", nama: "Air Putih Hangat", harga: 1000 },
+  { id: 11, kategori: "Tambahan", nama: "Tempe 1 iris", harga: 1000 },
+  { id: 12, kategori: "Tambahan", nama: "Tahu 1 iris",  harga: 1000 },
+  { id: 13, kategori: "Tambahan", nama: "Terong 1 iris", harga: 1000 },
+  { id: 14, kategori: "Tambahan", nama: "Kerupuk",     harga: 1000 },
+];
+
+/* ========== 1b. TOMBOL UANG CEPAT ==========
+   Ubah angka di bawah sesuai kebutuhan (satuan rupiah).
+   Tiap tap MENAMBAH uang dibayar: 20rb + 5rb = 25rb. */
+const pecahan = [2000, 5000, 10000, 20000, 50000, 100000];
+
+/* ========== 2. STATE (data yang berubah) ==========
+   keranjang disimpan sebagai object: { idMenu: jumlah }
+   Kenapa object, bukan array? Supaya menu yang sama
+   tidak pernah tercatat dobel: tap lagi = jumlahnya naik. */
+let keranjang = {};
+
+// Item bebas: harga diketik manual saat transaksi (tidak ada di daftar menu).
+// Id-nya mulai dari 1000 supaya tidak bentrok dengan id menu.
+let itemBebas = {};
+let idBebas = 1000;
+
+/* ========== 3. FUNGSI BANTU ========== */
+const rupiah = (n) => "Rp " + n.toLocaleString("id-ID");
+const $ = (id) => document.getElementById(id);
+const cariMenu = (id) => menu.find((m) => m.id === id) || itemBebas[id];
+
+function hitungTotal() {
+  let total = 0;
+  for (const id in keranjang) {
+    total += cariMenu(Number(id)).harga * keranjang[id];
+  }
+  return total;
+}
+
+/* ========== 4. AKSI KERANJANG ========== */
+function tambah(id) {
+  keranjang[id] = (keranjang[id] || 0) + 1;
+  render();
+}
+
+function kurang(id) {
+  keranjang[id]--;
+  if (keranjang[id] <= 0) delete keranjang[id]; // hapus kalau jadi 0
+  render();
+}
+
+function reset() {
+  keranjang = {};
+  itemBebas = {};
+  $("bayar").value = "";
+  render();
+}
+
+/* ========== 5. TAMPILAN (render) ==========
+   Setiap data berubah, kita gambar ulang tampilan
+   dari state. Ini pola dasar yang juga dipakai React/Vue. */
+let kategoriAktif = "Makanan";
+function renderMenu() {
+  // tab kategori dibuat otomatis dari data menu
+  const kategori = [...new Set(menu.map((m) => m.kategori))];
+  $("tabs").innerHTML = "";
+  kategori.forEach((k) => {
+    const t = document.createElement("button");
+    t.textContent = k;
+    t.className = k === kategoriAktif ? "aktif" : "";
+    t.onclick = () => { kategoriAktif = k; renderMenu(); };
+    $("tabs").appendChild(t);
+  });
+  $("menu").innerHTML = "";
+  menu.filter((m) => m.kategori === kategoriAktif).forEach((m) => {
+    const tombol = document.createElement("button");
+    tombol.innerHTML = `<span class="nama">${m.nama}</span><span class="harga">${rupiah(m.harga)}</span>`;
+    tombol.onclick = () => tambah(m.id);
+    $("menu").appendChild(tombol);
+  });
+}
+
+function renderKeranjang() {
+  const ids = Object.keys(keranjang);
+  if (ids.length === 0) {
+    $("keranjang").innerHTML = '<div class="kosong">Belum ada pesanan</div>';
+    return;
+  }
+  $("keranjang").innerHTML = "";
+  ids.forEach((id) => {
+    const m = cariMenu(Number(id));
+    const qty = keranjang[id];
+    const baris = document.createElement("div");
+    baris.className = "item";
+    baris.innerHTML = `
+      <div class="info">
+        <div>${m.nama}</div>
+        <div class="sub">${rupiah(m.harga)} × ${qty} = ${rupiah(m.harga * qty)}</div>
+      </div>
+      <div class="qty">
+        <button aria-label="kurang">−</button>
+        <span>${qty}</span>
+        <button aria-label="tambah">+</button>
+      </div>`;
+    const [btnKurang, btnTambah] = baris.querySelectorAll("button");
+    btnKurang.onclick = () => kurang(Number(id));
+    btnTambah.onclick = () => tambah(Number(id));
+    $("keranjang").appendChild(baris);
+  });
+}
+
+function renderPembayaran() {
+  const total = hitungTotal();
+  const bayar = Number($("bayar").value) || 0;
+  const selisih = bayar - total;
+
+  $("total").textContent = rupiah(total);
+
+  if (total > 0 && bayar < total) {
+    $("labelKembalian").textContent = "Kurang";
+    $("kembalian").textContent = rupiah(total - bayar);
+    $("kembalian").className = "kurang";
+  } else {
+    $("labelKembalian").textContent = "Kembalian";
+    $("kembalian").textContent = rupiah(Math.max(selisih, 0));
+    $("kembalian").className = "ok";
+  }
+
+  // Tombol Selesai hanya aktif kalau ada pesanan dan uang cukup
+  $("btnSelesai").disabled = !(total > 0 && bayar >= total);
+}
+
+// Tombol uang cepat: "Uang pas" + pecahan umum
+function renderCepat() {
+  const total = hitungTotal();
+  $("cepat").innerHTML = "";
+
+  const pas = document.createElement("button");
+  pas.textContent = "Uang pas";
+  pas.onclick = () => { $("bayar").value = total; renderPembayaran(); };
+  $("cepat").appendChild(pas);
+
+  pecahan.forEach((p) => {
+    const b = document.createElement("button");
+    b.textContent = "+" + (p / 1000) + "rb";
+    b.onclick = () => {
+      $("bayar").value = (Number($("bayar").value) || 0) + p; // dijumlahkan
+      renderPembayaran();
+    };
+    $("cepat").appendChild(b);
+  });
+
+  // Tombol hapus uang dibayar (kalau salah tap)
+  const hapus = document.createElement("button");
+  hapus.textContent = "Hapus";
+  hapus.onclick = () => { $("bayar").value = ""; renderPembayaran(); };
+  $("cepat").appendChild(hapus);
+}
+
+function render() {
+  renderKeranjang();
+  renderCepat();
+  renderPembayaran();
+}
+
+/* ========== 6. SELESAIKAN TRANSAKSI ==========
+   Untuk sekarang hanya mengosongkan keranjang.
+   Di Tahap 2, di sinilah kita SIMPAN transaksi
+   (item, total, tanggal, jam) ke IndexedDB. */
+function selesai() {
+  const transaksi = {
+    waktu: new Date().toISOString(),
+    item: { ...keranjang },
+    total: hitungTotal(),
+    bayar: Number($("bayar").value),
+  };
+  console.log("Transaksi selesai:", transaksi); // cek di console browser
+
+  reset();
+  const t = $("toast");
+  t.textContent = "Transaksi selesai ✓";
+  t.classList.add("tampil");
+  setTimeout(() => t.classList.remove("tampil"), 1500);
+}
+
+/* ========== 7. PASANG EVENT & JALANKAN ========== */
+$("bayar").addEventListener("input", renderPembayaran);
+$("btnReset").onclick = reset;
+$("btnSelesai").onclick = selesai;
+
+$("btnBebas").onclick = () => {
+  const harga = Number($("bebasHarga").value);
+  if (!harga || harga <= 0) return;
+  const nama = $("bebasNama").value.trim() || "Item bebas";
+  const id = idBebas++;
+  itemBebas[id] = { id, nama, harga };
+  keranjang[id] = 1;
+  $("bebasNama").value = "";
+  $("bebasHarga").value = "";
+  render();
+};
+
+renderMenu();
+render();
+</script>
+</body>
+</html>
