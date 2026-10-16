@@ -103,13 +103,13 @@ Evaluasi menggunakan MAE, RMSE, dan MAPE.
 
 ## Catatan Pengembangan
 
-Catatan masalah yang ditemukan saat uji coba di warung dan keputusan desainnya bisa ditulis di `docs/catatan.md`.
+<!-- Catatan masalah yang ditemukan saat uji coba di warung dan keputusan desainnya bisa ditulis di `docs/catatan.md`. -->
 
 ## Penulis
 
-**[Nama Kamu]**
-Mahasiswa Teknik Informatika, [Nama Kampus]
-GitHub: [@username](https://github.com/username)
+**[Muhammad Abdurrohman]**
+Mahasiswa Teknik Informatika, Universitas Nusantara PGRI Kediri.
+GitHub: [@amdma](https://github.com/amdma)
 
 ## Lisensi
 
