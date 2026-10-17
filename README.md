@@ -1,10 +1,24 @@
+<div align="center">
+
 # 🍜 POS Warung PWA
+
+</div>
 
 Sistem Point of Sale (kasir) berbasis Progressive Web App untuk warung makan, dengan rencana fitur prediksi kebutuhan porsi harian. Dikembangkan sebagai bagian dari tugas akhir/skripsi.
 
 > **Status:** 🚧 Dalam pengembangan. Tahap 1 dan 2 selesai (kasir, antrian, penyimpanan lokal, riwayat). Berikutnya: Tahap 3 (PWA).
 
-![Screenshot aplikasi](docs/screenshot.png)
+<div align="center">
+<h1><a id="screenshots"></a>Screenshots</h1>
+
+<img src="doc/screenshots/screenshot_1.jpeg" alt="Kasir - Paket" width="30%" />
+<img src="doc/screenshots/screenshot_2.jpeg" alt="Kasir - Aneka Lauk" width="30%" />
+<img src="doc/screenshots/screenshot_3.jpeg" alt="Kasir - Minuman" width="30%" />
+<img src="doc/screenshots/screenshot_4.jpeg" alt="Detail Pesanan" width="30%" />
+<img src="doc/screenshots/screenshot_5.jpeg" alt="Antrian - Menunggu" width="30%" />
+<img src="doc/screenshots/screenshot_7.jpeg" alt="Riwayat" width="30%" />
+
+</div>
 
 **Demo:** https://amdma.github.io/pos-warung-pwa/
 
