@@ -11,12 +11,12 @@ Sistem Point of Sale (kasir) berbasis Progressive Web App untuk warung makan, de
 <div align="center">
 <h1><a id="screenshots"></a>Screenshots</h1>
 
-<img src="doc/screenshots/screenshot_1.jpeg" alt="Kasir - Paket" width="30%" />
-<img src="doc/screenshots/screenshot_2.jpeg" alt="Kasir - Aneka Lauk" width="30%" />
-<img src="doc/screenshots/screenshot_3.jpeg" alt="Kasir - Minuman" width="30%" />
-<img src="doc/screenshots/screenshot_4.jpeg" alt="Detail Pesanan" width="30%" />
-<img src="doc/screenshots/screenshot_5.jpeg" alt="Antrian - Menunggu" width="30%" />
-<img src="doc/screenshots/screenshot_7.jpeg" alt="Riwayat" width="30%" />
+<img src="docs/screenshots/screenshot_1.jpeg" alt="Kasir - Paket" width="30%" />
+<img src="docs/screenshots/screenshot_2.jpeg" alt="Kasir - Aneka Lauk" width="30%" />
+<img src="docs/screenshots/screenshot_3.jpeg" alt="Kasir - Minuman" width="30%" />
+<img src="docs/screenshots/screenshot_4.jpeg" alt="Detail Pesanan" width="30%" />
+<img src="docs/screenshots/screenshot_5.jpeg" alt="Antrian - Menunggu" width="30%" />
+<img src="docs/screenshots/screenshot_7.jpeg" alt="Riwayat" width="30%" />
 
 </div>
 
