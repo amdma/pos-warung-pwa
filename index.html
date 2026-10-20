@@ -89,11 +89,23 @@
       gap: 8px
     }
 
-    .menu button {
+    .menu .tile {
       background: var(--bg);
-      color: var(--text);
       border: 1px solid var(--line);
       border-radius: 12px;
+      overflow: hidden
+    }
+
+    .menu .tile.terpilih {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent)
+    }
+
+    .menu .tile-btn {
+      width: 100%;
+      background: none;
+      color: var(--text);
+      border: none;
       padding: 14px 8px;
       font-size: 1rem;
       cursor: pointer;
@@ -101,8 +113,33 @@
       min-height: 72px
     }
 
-    .menu button:active {
-      transform: scale(.96)
+    .menu .tile-btn:active {
+      background: var(--line)
+    }
+
+    .tile-qty {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px;
+      border-top: 1px solid var(--line)
+    }
+
+    .tile-qty button {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--text);
+      font-size: 1.3rem;
+      cursor: pointer
+    }
+
+    .tile-qty b {
+      font-size: 1.2rem;
+      min-width: 28px;
+      text-align: center
     }
 
     .menu .nama {
@@ -455,8 +492,19 @@
    Di layar lebar (>=760px) tampilan tetap 2 kolom seperti biasa. */
     .bar,
     .backdrop,
-    .tutup {
+    .btn-tutup {
       display: none
+    }
+
+    .batal-kecil {
+      float: right;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--bad);
+      background: var(--bg);
+      color: var(--bad);
+      font-size: .85rem;
+      cursor: pointer
     }
 
     @media(max-width:759px) {
@@ -525,16 +573,8 @@
         z-index: 25
       }
 
-      .tutup {
-        display: block;
-        float: right;
-        padding: 6px 12px;
-        border-radius: 999px;
-        border: 1px solid var(--line);
-        background: var(--bg);
-        color: var(--text);
-        font-size: .85rem;
-        cursor: pointer
+      .btn-tutup {
+        display: block
       }
 
       #toast {
@@ -560,13 +600,13 @@
       <div class="menu" id="menu"></div>
       <div class="bebas">
         <input id="bebasNama" placeholder="Item bebas (nama)">
-        <input id="bebasHarga" type="number" inputmode="numeric" placeholder="Harga">
+        <input id="bebasHarga" type="text" inputmode="decimal" placeholder="Harga (ribu)">
         <button id="btnBebas">+ Tambah</button>
       </div>
     </section>
 
     <section class="panel" id="panelPesanan">
-      <h2>Pesanan <button class="tutup" id="btnTutup">Tutup ✕</button></h2>
+      <h2>Pesanan <button class="batal-kecil" id="btnBatal">Batal ✕</button></h2>
       <input id="labelPesanan" placeholder="Nama / meja (mis. Meja 3, Pak Budi)">
       <div id="keranjang"></div>
 
@@ -579,7 +619,7 @@
       <div class="kembalian"><span id="labelKembalian">Kembalian</span><span id="kembalian">Rp 0</span></div>
 
       <div class="aksi">
-        <button class="btn-reset" id="btnReset">Batal</button>
+        <button class="btn-reset btn-tutup" id="btnTutup">Tutup</button>
         <button class="btn-simpan" id="btnSimpan" disabled>Simpan ke antrian</button>
         <button class="btn-selesai" id="btnSelesai" disabled>Bayar &amp; selesai</button>
       </div>
@@ -703,17 +743,27 @@
       $("tabs").innerHTML = "";
       kategori.forEach((k) => {
         const t = document.createElement("button");
-        t.textContent = k;
+        const n = menu.filter((m) => m.kategori === k).reduce((s, m) => s + (keranjang[m.id] || 0), 0);
+        t.textContent = n ? `${k} (${n})` : k; // angka = total porsi di kategori itu
         t.className = k === kategoriAktif ? "aktif" : "";
         t.onclick = () => { kategoriAktif = k; renderMenu(); };
         $("tabs").appendChild(t);
       });
       $("menu").innerHTML = "";
       menu.filter((m) => m.kategori === kategoriAktif).forEach((m) => {
-        const tombol = document.createElement("button");
-        tombol.innerHTML = `<span class="nama">${m.nama}</span><span class="harga">${rupiah(m.harga)}</span>`;
-        tombol.onclick = () => tambah(m.id);
-        $("menu").appendChild(tombol);
+        const qty = keranjang[m.id] || 0;
+        const kartu = document.createElement("div");
+        kartu.className = "tile" + (qty ? " terpilih" : "");
+        kartu.innerHTML = `
+      <button class="tile-btn"><span class="nama">${m.nama}</span><span class="harga">${rupiah(m.harga)}</span></button>
+      ${qty ? `<div class="tile-qty"><button aria-label="kurang">−</button><b>${qty}</b><button aria-label="tambah">+</button></div>` : ""}`;
+        kartu.querySelector(".tile-btn").onclick = () => tambah(m.id);
+        if (qty) {
+          const [btnK, btnT] = kartu.querySelectorAll(".tile-qty button");
+          btnK.onclick = () => kurang(m.id);
+          btnT.onclick = () => tambah(m.id);
+        }
+        $("menu").appendChild(kartu);
       });
     }
 
@@ -807,6 +857,7 @@
       renderCepat();
       renderPembayaran();
       renderBar();
+      renderMenu(); // perbarui jumlah per menu di halaman kasir
     }
 
     /* ========== 6. SELESAIKAN TRANSAKSI ==========
@@ -992,16 +1043,65 @@
       if (v === "riwayat") renderRiwayat();
     }
 
+    /* ========== 6d. LAYAR SELALU MENYALA (Screen Wake Lock) ==========
+       Selalu aktif selama aplikasi dibuka; layar baru mati kalau
+       tombol power ditekan. Butuh HTTPS.
+       Sistem melepas kunci ini sendiri saat tab disembunyikan,
+       jadi kita minta lagi saat halaman terlihat kembali. */
+    let wakeLock = null;
+
+    async function ambilWake() {
+      try {
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", () => { wakeLock = null; });
+      } catch (e) {
+        console.warn("Wake lock gagal:", e);
+      }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && !wakeLock) ambilWake();
+    });
+    // Beberapa browser hanya mengizinkan setelah ada sentuhan; coba lagi saat layar disentuh
+    document.addEventListener("click", () => { if (!wakeLock) ambilWake(); });
+
+    // Batal butuh 2 ketukan (konfirmasi) supaya tidak terhapus karena salah pencet
+    function batalPesanan() {
+      const btn = $("btnBatal");
+      if (Object.keys(keranjang).length === 0) { reset(); return; } // kosong: tidak perlu konfirmasi
+      if (btn.dataset.yakin) {
+        delete btn.dataset.yakin;
+        btn.textContent = "Batal ✕";
+        reset();
+        return;
+      }
+      btn.dataset.yakin = "1";
+      btn.textContent = "Yakin batal?";
+      setTimeout(() => { delete btn.dataset.yakin; btn.textContent = "Batal ✕"; }, 3000);
+    }
+
     /* ========== 7. PASANG EVENT & JALANKAN ========== */
     $("bayar").addEventListener("input", renderPembayaran);
-    $("btnReset").onclick = reset;
+    $("btnBatal").onclick = batalPesanan;
     $("btnBuka").onclick = () => document.body.classList.add("sheet-buka");
     $("btnTutup").onclick = () => document.body.classList.remove("sheet-buka");
     $("backdrop").onclick = () => document.body.classList.remove("sheet-buka");
     $("btnSelesai").onclick = selesai;
 
+    // Harga item bebas diketik dalam RIBUAN: 6 = Rp 6.000, 2.5 = Rp 2.500
+    function hargaBebas() {
+      const n = parseFloat($("bebasHarga").value.replace(",", "."));
+      return n > 0 ? Math.round(n * 1000) : 0;
+    }
+    $("bebasHarga").addEventListener("input", () => {
+      const h = hargaBebas();
+      $("btnBebas").textContent = h ? "+ " + rupiah(h) : "+ Tambah"; // pratinjau harga
+    });
+    $("bebasHarga").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") $("btnBebas").click();
+    });
     $("btnBebas").onclick = () => {
-      const harga = Number($("bebasHarga").value);
+      const harga = hargaBebas();
       if (!harga || harga <= 0) return;
       const nama = $("bebasNama").value.trim() || "Item bebas";
       const id = idBebas++;
@@ -1009,12 +1109,16 @@
       keranjang[id] = 1;
       $("bebasNama").value = "";
       $("bebasHarga").value = "";
+      $("btnBebas").textContent = "+ Tambah";
       render();
     };
 
     document.querySelectorAll("#nav button").forEach((b) => (b.onclick = () => tampilView(b.dataset.v)));
     $("btnSimpan").onclick = simpanAntrian;
     setInterval(renderAntrian, 60000); // perbarui "x menit lalu"
+
+    // Layar langsung dijaga menyala begitu aplikasi dibuka
+    if ("wakeLock" in navigator) ambilWake();
 
     renderMenu();
     render();
