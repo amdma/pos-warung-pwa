@@ -160,7 +160,7 @@ Evaluasi menggunakan MAE, RMSE, dan MAPE.
 
 ## Catatan Pengembangan
 
-Masalah yang ditemukan saat observasi dan uji coba di warung, beserta keputusan desainnya, dicatat di `docs/catatan.md`. Contoh yang sudah menjadi dasar fitur:
+Masalah yang ditemukan saat observasi dan uji coba di warung, beserta keputusan desainnya, dicatat di `[docs/catatan.md](docs/catatan.md)`. Contoh yang sudah menjadi dasar fitur:
 
 - Pesanan sering terlupa saat banyak pelanggan datang bersamaan, karena pembayaran dilakukan di akhir dan pesanan hanya diingat. Solusinya fitur antrian dengan status.
 - Harga dan porsi tidak selalu baku (tambahan satu iris, air putih saja). Solusinya item bebas dan kategori menu yang mengikuti menu cetak.
